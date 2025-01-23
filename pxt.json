@@ -1,5 +1,6 @@
 {
     "name": "barcode-pattern-generator",
+    "version": "0.1.0",
     "description": "",
     "dependencies": {
         "device": "*"
