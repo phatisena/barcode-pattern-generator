@@ -28,16 +28,18 @@ namespace barcode {
         return sti
     }
 
-    //%blockid=barcode_genpattern
-    //%block="gen barcode pattern in widebar: $wideBars narrowbar: $narrowBars"
-    export function genPatterns(wideBars: number, narrowBars: number): string[] {
+    //%blockid=barcode_genbitpattern
+    //%block="generate bit pattern by widebar: $wideBars narrowbar: $narrowBars"
+    //%group="pattern generator"
+    //%weight=10
+    export function genBitPattern(wideBars: number, narrowBars: number): string[] {
         if (wideBars > narrowBars) {
             throw (`The number of thick bars must not be more than the thin bars. widebar: ${wideBars}, narrowbar: ${narrowBars}`);
         }
 
         const totalBars = wideBars + narrowBars;
         const patterns: string[] = [];
-        const maxPatterns = Math.pow(2, totalBars); // จำนวนรูปแบบสูงสุด
+        const maxPatterns = Math.pow(2, totalBars);
 
         for (let i = 0; i < maxPatterns; i++) {
             const binaryPattern = decEncode(i,2,totalBars)
@@ -52,6 +54,55 @@ namespace barcode {
         patterns.reverse()
 
         return patterns;
+    }
+
+    function checkAnum(istr:string) {
+        for (let i = 0;i < istr.length; i++) {
+            if (!(anmt.includes(istr.charAt(i)))) return false
+        }
+        return true
+    }
+
+    function addAnum(istr:string,nv:number) {
+        let ustr = "", cstr = "", anv = 0
+        for (let i = 0;i < istr.length;i++) {
+            anv = anmt.indexOf(istr.charAt(i))
+            anv = Math.min(anv+nv,anmt.length-1)
+            cstr = anmt.charAt(anv)
+            ustr += cstr
+        }
+        return ustr
+    }
+
+    function sumAnum(istr:string) {
+        let cnv = 0, nv = 0
+        for (let i = 0;i < istr.length;i++) {
+            nv = anmt.indexOf(istr.charAt(i))
+            cnv += nv
+        }
+        return cnv
+    }
+
+    //%blockid=barcode_genwidthpattern
+    //%block="generate width pattern by bitlen: $bitlen bitsplit: $splitbit"
+    //%group="pattern generator"
+    //%weight=5
+    export function genWidthPattern(bitlen:number,splitbit:number) {
+        if (splitbit >= bitlen) throw (`The number of bit splits will be Must not be more than the number of bits. bitlen: ${bitlen}, splitbit: ${splitbit}`)
+        let nnv = 0, bnnv = 0, uustr = ""
+        do {
+            uustr = decEncode(nnv,anmt.length,splitbit)
+            uustr = addAnum(uustr,1)
+            nnv += 1
+        } while (sumAnum(uustr) === bitlen)
+        for (let ii = 0;ii < uustr.length;ii++) bnnv = Math.max(bnnv,anmt.indexOf(uustr.charAt(ii)));
+        let maxpattern = Math.pow(bnnv,splitbit), patterns: string[] = []
+        for (let ii = 0;ii < maxpattern;ii++) {
+            uustr = decEncode(ii,bnnv,splitbit)
+            uustr = addAnum(uustr,1)
+            if (sumAnum(uustr) === bitlen) patterns.push(uustr);
+        }
+        return patterns
     }
 
 }
